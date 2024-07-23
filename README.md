@@ -254,20 +254,22 @@
 > - Xử lý trước, nhận phản hồi Account sau
 > - Account không check số dư
 
-- b1: Gọi SP validate (check trạng thái bật job, check ngày nghỉ, ...)
+- b1: Gọi SP validate **spmamo_extendadd_auto_validate** (check trạng thái bật job, check ngày nghỉ, ...)
 
-- b2: Gọi SP làm nghiệp vụ gia hạn tự động hđ T+ để xử lý và log input cho ALL row (lỗi 1 dòng thì update log input db và xử lý tiếp các dòng khác)
+- b2: Lấy thông tin phương thức xử lý HĐ từ Fee: Gọi API lấy danh sách **http://para.fee.rs-dev.toms.fpts.com.vn:8086/api/v1/fee/method-margin**
 
-- b3: Lấy danh sách gửi noti cho KH
+- b2: Gọi SP làm nghiệp vụ **spmamo_extendadd_auto** gia hạn tự động hđ T+ để xử lý và log input cho ALL row (lỗi 1 dòng thì update log input db và xử lý tiếp các dòng khác)
 
-- b4: Gọi SP lấy danh gửi msg sang topic Account (chỉ lấy các dòng đã xử lý thành công ở DB và chưa gửi Account)
+- b3: Lấy danh sách gửi noti cho KH (rs3 của sp nghiệp vụ)
+
+- b4: Lấy danh gửi msg sang topic Account (chỉ lấy các dòng đã xử lý thành công ở DB và chưa gửi Account) (rs1 của sp nghiệp vụ)
 
   - Log input memory
   - Log sum memory
 
-- b5: Gửi msg Tiền sang topic Account
+- b5: Gửi msg Tiền sang topic Account **Information.Account.Cash**
 
-- b6: Nhận phản hồi Tiền từ topic Account
+- b6: Nhận phản hồi Tiền từ topic Output Account **Information.Account.Cash.Output**
 
   - Check log input memory
 
@@ -279,9 +281,9 @@
 
     - Update log input db, log sum db
 
-    - Gọi sp lấy danh sách dữ liệu để gửi topic Output Mamo
+    - Gọi sp **spmamo_extendadd_auto_get** lấy danh sách dữ liệu để gửi topic Output Mamo **Loans.Mamo.Output**
 
-    - Gửi mail kết quả cho user, fit (mail fit ghi rõ bao nhiêu dòng lỗi ở db, bao nhiêu dòng lỗi ở Acocunt)
+    - Gửi **Mail** kết quả cho user, fit (mail fit ghi rõ bao nhiêu dòng lỗi ở db, bao nhiêu dòng lỗi ở Acocunt)
   - Exception nhận phản hồi msg Tiền Account Fail thì:
     - Check log input memory
     - Update log input memory
