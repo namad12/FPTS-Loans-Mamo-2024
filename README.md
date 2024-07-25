@@ -188,23 +188,21 @@
     - Gửi tay Msg thiếu
 
 
-
 ### UC-11: Cầm cố quyền (MAMO.11)
-
 > - Thuộc nghiệp vụ cuối ngày (sv endday)
 > - Tăng dư nợ, giảm CK mar
 > - Gửi Account msg Tiền trước, CK sau
 > - Xử lý trước, nhận phản hồi sau
 > - Account không check số dư
 
-- b1: Gọi SP validate (check trạng thái Job đang bật, check ngày nghỉ, ...)
+- b1: Gọi SP validate **spmamo_mor_rights_validate** (check trạng thái Job đang bật, check ngày nghỉ, ...)
 - b2: Gọi API lấy danh sách thông tin quyền từ Custd
-- b3: Gọi SP làm nghiệp vụ cầm cố quyền. Xử lý và Log Input DB cho ALL row (lỗi 1 dòng thì update log input db và xử lý tiếp các dòng khác)
+- b3: Gọi SP **spmamo_mor_rights** làm nghiệp vụ cầm cố quyền. Xử lý và Log Input DB cho ALL row (lỗi 1 dòng thì update log input db và xử lý tiếp các dòng khác)
 - b4: Gọi SP lấy danh sách cần gửi Account (lấy các dòng xử lý thành công ở DB để gửi Account)
   - Log Input Memory
   - Log Sum Memory
-- b5: Gửi msg Tiền sang Account 
-- b6: Nhận phản hồi msg Tiền Account
+- b5: Gửi msg Tiền sang topic Account **Information.Account.Cash**
+- b6: Nhận phản hồi msg topic Output Tiền Account **Information.Account.Cash.Output**
   - Check log input memory
   - Update log input memory
   - Exception nhận phản hồi msg Tiền từ Acc Fail
@@ -245,7 +243,6 @@
   - Gửi tay msg thiếu
 
 
-
 ### UC-12: Gia hạn tự động hợp đồng T+ (MAMO.12)
 
 > - Thuộc nghiệp vụ cuối ngày (sv endday)
@@ -260,7 +257,7 @@
 
 - b2: Gọi SP làm nghiệp vụ **spmamo_extendadd_auto** gia hạn tự động hđ T+ để xử lý và log input cho ALL row (lỗi 1 dòng thì update log input db và xử lý tiếp các dòng khác)
 
-- b3: Lấy danh sách gửi noti cho KH (rs3 của sp nghiệp vụ)
+- b3: Lấy danh sách gửi noti cho KH (rs3 của sp nghiệp vụ) ra topic **Utility.Notification.MessageSendRequest**
 
 - b4: Lấy danh gửi msg sang topic Account (chỉ lấy các dòng đã xử lý thành công ở DB và chưa gửi Account) (rs1 của sp nghiệp vụ)
 
@@ -305,19 +302,37 @@ b1: Gọi Sp cập nhật trạng thái thị trường
 b2: Nếu đầu vào API MarketState=1 thì gọi thêm sp cập nhật danh sách các hợp đồng không được trả nợ
 
 
+### Tạo hợp đồng Margin
+  - API Tìm kiếm DS HĐ Margin cần tạo **http://mamo.rs-dev.loans.fpts.com.vn:8086/api/v1/Margin/contracts/NAMNV**
 
-### UC-14: Tổng hợp Trade mua Margin (để tạo HĐ Margin) (MAMO.14)
+```
+Tạo hợp đồng T+
+b1: vào eztrade đặt lệnh mua Ký quỹ (TK phải đc đk T+)
+b2: nhờ Loan khớp lệnh
+b3: nhờ Thảo SST đẩy trade về nova
+b4: vào form tạo hợp đồng marign tổng hợp rồi tạo hđ
+
+
+Thay đổi hạn mức trên eztrade/mobile
+vào thay đổi, nếu phải duyệt thì vào hạn mức trên ezmargin để duyệt
+nếu người duyệt có hạn mức nhỏ hơn hạn mức duyệt thì phải qua form duyệt quản lý rủi ro 
+
+```
+
+
+#### UC-14: Tổng hợp Trade mua Margin (để tạo HĐ Margin) (MAMO.14)
 
 > - Thuộc nghiệp vụ cuối ngày (sv endday)
 > - Không gửi msg sang topic Account
 
 - b1: Gọi API nova để lấy danh sách trade mua margin trong ngày
-- b2: Gọi sp mamo để insert dữ liệu vào db
+- b2: Gọi sp mamo **spmamo_mar_create_sum** để insert dữ liệu vào db
   - Exception gọi sp mamo fail thì api phản hồi false, code, msg lỗi
 
+- API Tổng hợp Trade mua Margin (để tạo HĐ margin) **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/api/v1/Mamo/buy**
 
 
-### UC-15: Tạo HĐ Margin (MAMO.15)
+#### UC-15: Tạo HĐ Margin (MAMO.15)
 
 > - Thuộc nghiệp vụ cuối ngày (sv endday)
 > - Tăng dư nợ
@@ -325,6 +340,7 @@ b2: Nếu đầu vào API MarketState=1 thì gọi thêm sp cập nhật danh s�
 > - Xử lý trước, nhận phản hồi Account sau
 > - Account không check số dư
 
+- API Tạo hợp đồng Margin **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/api/v1/Mamo**
 - b1: Check RequestId tại Log Input Memory
 - b2: Gọi API Fee để lấy danh sách tài khoản đang dùng T+
 - b3: Gọi SP làm nghiêp vụ tạo hợp đồng để xử lý và log input cho ALL row (lỗi 1 dòng thì update log input db và xử lý tiếp các dòng khác)
