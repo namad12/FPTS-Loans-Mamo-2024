@@ -196,7 +196,7 @@
 > - Account không check số dư
 
 - b1: Gọi SP validate **spmamo_mor_rights_validate** (check trạng thái Job đang bật, check ngày nghỉ, ...)
-- b2: Gọi API lấy danh sách thông tin quyền từ Custd
+- b2: Gọi API **http://rightoltpgtw-dev.securities.fpts.com.vn:8086/api/v1/RightOltp/rightformort-list** lấy danh sách thông tin quyền từ Custd
 - b3: Gọi SP **spmamo_mor_rights** làm nghiệp vụ cầm cố quyền. Xử lý và Log Input DB cho ALL row (lỗi 1 dòng thì update log input db và xử lý tiếp các dòng khác)
 - b4: Gọi SP lấy danh sách cần gửi Account (lấy các dòng xử lý thành công ở DB để gửi Account)
   - Log Input Memory
