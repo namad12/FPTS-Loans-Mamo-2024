@@ -292,7 +292,7 @@
 
 
 
-### UC-13: Cập nhật trạng thái thị trường (MAMO.13)
+### UC-13: [Cập nhật trạng thái thị trường](http://internaltest.fpts.com.vn/EzLoans/Pages/ChayHeThong/Margin/MarketState.aspx) (MAMO.13)
 
 > - Thuộc nghiệp vụ cuối ngày (sv endday)
 > - Không gửi msg sang Account
@@ -302,7 +302,7 @@ b1: Gọi Sp cập nhật trạng thái thị trường
 b2: Nếu đầu vào API MarketState=1 thì gọi thêm sp cập nhật danh sách các hợp đồng không được trả nợ
 
 
-### Tạo hợp đồng Margin
+### [Tạo hợp đồng Margin](http://internaltest.fpts.com.vn/EzLoans/Pages/ChayHeThong/Margin/AddContract.aspx)
   - API Tìm kiếm DS HĐ Margin cần tạo **http://mamo.rs-dev.loans.fpts.com.vn:8086/api/v1/Margin/contracts/NAMNV**
 
 ```
@@ -310,7 +310,7 @@ Tạo hợp đồng T+
 b1: vào eztrade đặt lệnh mua Ký quỹ (TK phải đc đk T+)
 b2: nhờ Loan khớp lệnh
 b3: nhờ Thảo SST đẩy trade về nova
-b4: vào form tạo hợp đồng marign tổng hợp rồi tạo hđ
+b4: vào form tạo hợp đồng marign bấm tổng hợp rồi tạo hđ
 
 
 Thay đổi hạn mức trên eztrade/mobile
@@ -324,12 +324,20 @@ nếu người duyệt có hạn mức nhỏ hơn hạn mức duyệt thì phả
 
 > - Thuộc nghiệp vụ cuối ngày (sv endday)
 > - Không gửi msg sang topic Account
+> - Command SumerizeMarginBuyCommand
 
-- b1: Gọi API nova để lấy danh sách trade mua margin trong ngày
+- b1: Gọi API nova cung cấp danh sách trade mua margin **http://settle.trade.rs-dev.toms.fpts.com.vn:8086/api/v1/settle/TradeMarginGet?ptype=1** để lấy ra danh sách trade mua margin trong ngày
 - b2: Gọi sp mamo **spmamo_mar_create_sum** để insert dữ liệu vào db
   - Exception gọi sp mamo fail thì api phản hồi false, code, msg lỗi
 
 - API Tổng hợp Trade mua Margin (để tạo HĐ margin) **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/api/v1/Mamo/buy**
+
+
+#### UC: Tìm kiếm DS HĐ margin cần tạo
+> - Thuộc nghiệp vụ cuối ngày (api trong sv rs)
+
+- API: **http://mamo.rs-dev.loans.fpts.com.vn:8086/api/v1/Margin/contracts/NAMNV**
+- Gọi tới SP: **spmamo_mar_create_sum_get**
 
 
 #### UC-15: Tạo HĐ Margin (MAMO.15)
@@ -339,11 +347,13 @@ nếu người duyệt có hạn mức nhỏ hơn hạn mức duyệt thì phả
 > - Gửi msg Tiền sang topic Account
 > - Xử lý trước, nhận phản hồi Account sau
 > - Account không check số dư
+> - Command CreateMarginCommand
 
 - API Tạo hợp đồng Margin **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/api/v1/Mamo**
+  
 - b1: Check RequestId tại Log Input Memory
-- b2: Gọi API Fee để lấy danh sách tài khoản đang dùng T+
-- b3: Gọi SP làm nghiêp vụ tạo hợp đồng để xử lý và log input cho ALL row (lỗi 1 dòng thì update log input db và xử lý tiếp các dòng khác)
+- b2: Gọi API Fee để lấy danh sách tài khoản đang dùng T+ **http://para.fee.rs-dev.toms.fpts.com.vn:8086/api/v1/fee/clientcode-T?type={type}** (gói T+ type=1; gói thường type=2)
+- b3: Gọi SP **spmamo_mar_create_exec** làm nghiêp vụ tạo hợp đồng để xử lý và log input cho ALL row (lỗi 1 dòng thì update log input db và xử lý tiếp các dòng khác)
 - b4: Gọi SP lấy danh sách cần gửi msg sang topic Account (chỉ lấy các dòng đã xử lý thành công ở DB và chưa gửi Account)
   - Log input memory
   - Log sum memory
