@@ -386,7 +386,8 @@ PI MAMO
 > - Thuộc nghiệp vụ cuối ngày (sv endday)
 > - Không gửi msg Account
 
-- b1: Gọi API nova để lấy danh sách trade bán Margin trong ngày
+- API tổng hợp PI **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/api/v1/Mamo/sell**
+- b1: Gọi API nova **http://settle.trade.rs-dev.toms.fpts.com.vn:8086/api/v1/settle/TradeMarginGet?ptype=2** để lấy danh sách trade bán Margin trong ngày
   - Exception: nếu gọi api null -> return luôn
 - b2: Gọi SP mamo **spmamo_pi_sum** để insert dữ liệu vào DB
   - Exception: SP không thành công thì phản hồi API là False, Code, Message lỗi
@@ -399,10 +400,32 @@ PI MAMO
 > - Xử lý trước, nhận phản hồi Account sau
 > - Account không check số dư
 
-b1: Check RequestId (check tại Log Input Memory)
-b2: Gọi SP để làm nghiệp vụ xử lý và 
+- b1: Check RequestId (check tại Log Input Memory)
+- b2: Gọi SP để làm nghiệp vụ xử lý và log input db cho all row (lỗi 1 dòng update log input và xử lý tiếp các dòng khác)
+- b3: Lấy danh sách gửi Account (chỉ lấy các dòng đã xử lý thành công ở DB và chưa gửi Account)
+- b4: Log Input Memory, Log Sum Memory
+- b5: Gửi Msg Tiền sang topic cho Account **Information.Account.Cash**
+- b6: Nhận phản hồi từ topic output Account **Information.Account.Cash.Output**
+  - Check log input memory
+  - Update log input memory
+  - Update log sum memory
+  - Check log sum: Nếu đã nhận đủ phản hồi Accout thì: Update log input db, log sum db
+  - Exception: nhận phản hồi msg tiền Fail
+    - Check log input memory
+    - Update log input memory
+    - Update log sum memory
+- b7: Gửi Msg ra topic Output Mamo (gọi sp để lấy danh sách dữ liệu)
+- b8: gửi Pusher
 
+#### UC-16: Tìm kiếm trade bán Margin (để PI Margin) 
+> - Thuộc nghiệp vụ cuối ngày (sv endday)
+> - API Tìm kiếm Xóa hợp đồng thành lý **http://mamo.rs-dev.loans.fpts.com.vn:8086/api/v1/Margin/contracts/liquidated/deleted***
+> - API trả cứu/ tìm kiếm DS HĐ chưa PI **http://mamo.rs-dev.loans.fpts.com.vn:8086/api/v1/Margin/unpayment-institution**
 
+- b1: Form PI Marmor bấm nút Tìm kiếm
+- b2: Gọi tới API Tìm kiếm Xóa hợp đồng thanh lý
+- b3: API gọi tới API **http://ezopengtw-dev.customer.fpts.com.vn:8086/api/v1/Ezopen/fpts-insider-get** để lấy danh sách NNB, NLQ hiệu lực bên EzOpen
+- b3: Lấy dữ liệu trả ra của API bên Open truyền vào SP **spmamo_autosell_delete_get** để hiển thị danh sách ra màn hình.
 
 
 ### UC-18: Cập nhật giá tham chiếu (để cập nhật hđ mamo khi chạy hệ thống) (MAMO.18)
