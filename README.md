@@ -303,7 +303,6 @@ b2: Nếu đầu vào API MarketState=1 thì gọi thêm sp cập nhật danh s�
 
 
 ### [Tạo hợp đồng Margin](http://internaltest.fpts.com.vn/EzLoans/Pages/ChayHeThong/Margin/AddContract.aspx)
-  - API Tìm kiếm DS HĐ Margin cần tạo **http://mamo.rs-dev.loans.fpts.com.vn:8086/api/v1/Margin/contracts/NAMNV**
 
 ```
 Tạo hợp đồng T+
@@ -333,14 +332,14 @@ nếu người duyệt có hạn mức nhỏ hơn hạn mức duyệt thì phả
 - API Tổng hợp Trade mua Margin (để tạo HĐ margin) **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/api/v1/Mamo/buy**
 
 
-#### UC: Tìm kiếm DS HĐ margin cần tạo
+#### UC-14: Tìm kiếm DS HĐ margin cần tạo (MAMO.14)
 > - Thuộc nghiệp vụ cuối ngày (api trong sv rs)
 
 - API: **http://mamo.rs-dev.loans.fpts.com.vn:8086/api/v1/Margin/contracts/NAMNV**
 - Gọi tới SP: **spmamo_mar_create_sum_get**
 
 
-#### UC-15: Tạo HĐ Margin (MAMO.15)
+#### UC-14: Tạo HĐ Margin (MAMO.14)
 
 > - Thuộc nghiệp vụ cuối ngày (sv endday)
 > - Tăng dư nợ
@@ -354,17 +353,17 @@ nếu người duyệt có hạn mức nhỏ hơn hạn mức duyệt thì phả
 - b1: Check RequestId tại Log Input Memory
 - b2: Gọi API Fee để lấy danh sách tài khoản đang dùng T+ **http://para.fee.rs-dev.toms.fpts.com.vn:8086/api/v1/fee/clientcode-T?type={type}** (gói T+ type=1; gói thường type=2)
 - b3: Gọi SP **spmamo_mar_create_exec** làm nghiêp vụ tạo hợp đồng để xử lý và log input cho ALL row (lỗi 1 dòng thì update log input db và xử lý tiếp các dòng khác)
-- b4: Gọi SP lấy danh sách cần gửi msg sang topic Account (chỉ lấy các dòng đã xử lý thành công ở DB và chưa gửi Account)
+- b4: Gọi SP **spmamo_mar_create_exec** lấy danh sách **rs1** cần gửi msg sang topic Account (chỉ lấy các dòng đã xử lý thành công ở DB và chưa gửi Account)
   - Log input memory
   - Log sum memory
-- b5: Gửi msg Tiền sang topic Account cho ALL row
-- b6: Nhận phải hồi Tiền từ topic Account:
+- b5: Gửi msg Tiền sang topic Account cho ALL row **Information.Account.Cash**
+- b6: Nhận phải hồi Tiền từ topic Account **Information.Account.Cash.Output**
   - Check log input memory
   - Update log input memory
   - Update log sum memory
   - Check log sum: nếu đã nhận đủ phản hồi Account rồi thì:
     - Update log input db, log sum db
-    - Gọi sp lấy danh sách dữ liệu để gửi msg ra topic Output Mamo
+    - Gọi SP **spmamo_mar_create_exec_get** lấy danh sách dữ liệu để gửi msg ra topic Output Mamo
     - Gửi Pusher
   - Exception nhận phản hồi tiền Account Fail
     - Check log input memory
@@ -372,17 +371,36 @@ nếu người duyệt có hạn mức nhỏ hơn hạn mức duyệt thì phả
     - Update log sum memory
     - Check log sum : nếu đã nhận đủ phản hồi Account rồi thì
       - Update log input db, log sum db
-      - Gọi SP để lấy danh sách dữ liệu để gửi topic Output Mamo
+      - Gọi SP **spmamo_mar_create_exec_get** để lấy danh sách dữ liệu để gửi topic Output Mamo
       - Gửi Pusher
 
-### UC-16: Tổng hợp Trade bán Margin (để PI Margin) (MAMO.16)
+### PI Mamo
+```
+PI MAMO
+  - b1: vào eztrade đặt lệnh bán HĐ Ký quỹ Margin (TK phải đc đk Margin có dùng T+ hoặc ko)
+  - b2: nhờ Loan khớp lệnh
+  - b3: nhờ Thảo SST đẩy trade về nova
+  - b4: vào form PI bấm Tổng hợp rồi bấm PI
+```
+#### UC-16: Tổng hợp Trade bán Margin (để PI Margin) (MAMO.16)
+> - Thuộc nghiệp vụ cuối ngày (sv endday)
+> - Không gửi msg Account
 
+- b1: Gọi API nova để lấy danh sách trade bán Margin trong ngày
+  - Exception: nếu gọi api null -> return luôn
+- b2: Gọi SP mamo **spmamo_pi_sum** để insert dữ liệu vào DB
+  - Exception: SP không thành công thì phản hồi API là False, Code, Message lỗi
 
+#### UC-16: Tạo GD trả nợ bằng bán ký quỹ PI (MAMO.16)
+> - Thuộc nghiệp vụ cuối ngày (sv endday)
+> - API xử lý cho N row
+> - Giảm dư nợ
+> - Gửi msg tiền sang Account
+> - Xử lý trước, nhận phản hồi Account sau
+> - Account không check số dư
 
-
-
-### UC-17: Tạo GD trả nợ bằng bán ký quỹ PI (MAMO.17)
-
+b1: Check RequestId (check tại Log Input Memory)
+b2: Gọi SP để làm nghiệp vụ xử lý và 
 
 
 
@@ -392,8 +410,13 @@ nếu người duyệt có hạn mức nhỏ hơn hạn mức duyệt thì phả
 
 
 ### UC-19: Cập nhật HĐ mamo khi chạy HT (MAMO.19)
+> - Thuộc nghiệp vụ Cuối ngày (sv endday)
+> - Không gửi msg sang Account
 
-
+- b1: Gọi SP **spmamo_contract_price_u** mamo để cập nhật HĐ
+  - Exception: gọi SP thất bại thì phản hồi API là False, Code, Message lỗi
+- b2: Lấy DL trả ra từ SP mamo: Loop để gọi SP RPT **rpt.spsms_insertsmsdata** gửi SMS
+  - Exception: SP RPT lỗi thì ghi log, bỏ qua dòng đó để chạy dòng khác
 
 
 
