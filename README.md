@@ -1,6 +1,9 @@
+> [LoansMamo.Api Service](http://mamo.rs-dev.loans.fpts.com.vn:8086/swagger/index.html)
+> [LoansMamo.Intraday Service](http://intraday.mamo.sv-dev.loans.fpts.com.vn:8086/swagger/index.html)
+> [LoansMamo.Endday Service](http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/swagger/index.html)
+> [MamoMailService](http://mail.mamo.sv-dev.loans.fpts.com.vn:8086/swagger/index.html)
+
 ### UC-01: Thay đổi hạn mức trên Web/ App (MAMO.1)
-
-
 
 ### Cầm cố
 
@@ -39,9 +42,7 @@
 - b10: Gửi Msg sang topic Output Mamo
 - b11: Gửi Pusher 
 
-
-
-### Trả nợ
+### Trả nợ 
 
 #### UC-03: Trả nợ web/ app (MAMO.3)
 
@@ -444,7 +445,15 @@ PI MAMO
 
 
 ### UC-20: Cập nhật giá sàn (khi tổng hợp các HĐ bị thanh lý và khi EOD) (MAMO.20)
+> - Thuộc nghiệp vụ cuối ngày (sv endday)
+> - API
+> - Không gửi msg sang topic Account
 
+- b1: Gọi API **http://trddev.toms-tradeorder.fpts.com.vn:8086/api/v1/stock/loans** của trd để lấy giá sàn của all các mã CK
+  - Exception: API không có dữ liệu thì ghi log lỗi và return false
+- b2: Gọi SP mamo **mamo.spmamo_price_u** để insert dữ liệu vào DB
+  - Exception: SP mamo chạy không thành công thì phản hồi API là False, Code, Msg lỗi
+  
 
 
 
@@ -462,6 +471,18 @@ PI MAMO
 
 
 ### UC-23: Settle trả nợ bằng bán ký quỹ (MAMO.23)
+> - Thuộc nghiệp vụ cuối ngày (sv endday)
+> - Job tự động chạy hàng ngày lúc 11h35 
+> - Có API trong trường hợp cần chạy lại
+> - Gửi msg Tiền sang topic Account
+> - Account không xử lý, chỉ ghi log -> Ko cần nhận phản hồi Account
+
+API Settle trả nợ bẳng bán ký quỹ **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/api/v1/Jobs/settle-debit**
+- b1: Gọi Sp **mamo.spmamo_sell_settle**
+  - Exception: gọi SP Fail thì ghi lỗi
+- b2: Lấy **rs** danh sách từ SP trả ra để gửi msg ra topic cho Account
+- b3: Gửi msg Tiền sang topic Account cho all row
+- b4: Gửi msg Output Loans ra topic 
 
 
 
@@ -474,7 +495,13 @@ PI MAMO
 
 
 ### UC-26: Cập nhật tham số phí HTV cho ALL KH (MAMO.26)
+> - Thuộc nghiệp vụ cuối ngày (sv endday)
+> - Job
 
+API Cập nhật tham số phí HTV cho ALL KH  **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/api/v1/Jobs/param/feerate**
+- b1: Gọi API Fee **http://para.fee.rs-dev.toms.fpts.com.vn:8086/api/v1/fee/clientcode-T?type=2** để lấy DS tỉ lệ phí HTV của ALL TK (gói T+ thì type=1, gói thường type=2)
+  - Exception: API Fee không có DL thì báo lỗi
+- b2: Gọi SP **mamo.spmamo_htv_eod** để cập nhật DB
 
 
 ### UC-27: Đối chiếu PI (MAMO.27)
@@ -490,10 +517,27 @@ PI MAMO
 
 
 ### UC-30: Thông báo cho KH các HĐ Mamo quá hạn (MAMO.30)
+> - Thuộc nghiệp vụ Cuối ngày (sv endday)
+> - Job
+> - Chạy lúc 8h15 sáng, các ngày làm việc từ t2 đến t6
 
+- API Thông báo cho các HĐ mamo bị quá hạn **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/api/v1/Jobs/notification/deadline-contract** 
+- b1: Gọi SP **mamo.spmamo_contract_deadline** để insert dữ liệu vào bảng mail, rồi trả ra **rs** danh sách các HĐ quá hạn để gửi SMS
+  - SP không có dữ liệu thì kết thúc Task
+- b2: Gọi SP insert **rpt.spsms_insertsmsdata** để Gửi SMS cho KH các HĐ quá hạn
 
 
 ### UC-31: Thông báo trạng thái HĐ (tất toán/ rơi vào mức xử lý) Mamo (MAMO.31)
+
+
+
+### UC-36: Cập nhật Broker ưu tiên của KH (MAMO.36)
+> - Thuộc nghiệp vụ cuối ngày (sv endday)
+
+API Cập nhật DS broker được gán cho KH **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/api/v1/Mamo/broker**
+- b1: Gọi API **http://para.fee.rs-dev.toms.fpts.com.vn:8086/api/v1/fee/broker-actvice-mamo** của Fee để lấy DS cần cập nhật (lấy all dữ liệu)
+  - Exception: API không có dữ liệu thì báo lỗi
+- b2: Gọi SP **mamo.spmamo_brokercust_i** để cập nhật DS vào DB: truyền p_Action = 2, p_list_brokercust = DS từ API 
 
 
 
