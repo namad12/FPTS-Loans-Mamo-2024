@@ -402,7 +402,7 @@ PI MAMO
 > - Account không check số dư
 
 - b1: Check RequestId (check tại Log Input Memory)
-- b2: Gọi SP để làm nghiệp vụ xử lý và log input db cho all row (lỗi 1 dòng update log input và xử lý tiếp các dòng khác)
+- b2: Gọi SP **mamo.spmamo_pi_exec** để làm nghiệp vụ xử lý và log input db cho all row (lỗi 1 dòng update log input và xử lý tiếp các dòng khác)
 - b3: Lấy danh sách gửi Account (chỉ lấy các dòng đã xử lý thành công ở DB và chưa gửi Account)
 - b4: Log Input Memory, Log Sum Memory
 - b5: Gửi Msg Tiền sang topic cho Account **Information.Account.Cash**
@@ -415,15 +415,19 @@ PI MAMO
     - Check log input memory
     - Update log input memory
     - Update log sum memory
-- b7: Gửi Msg ra topic Output Mamo (gọi sp để lấy danh sách dữ liệu)
-- b8: gửi Pusher
+- b7: Gửi Msg ra topic **Loans.Mamo.Output** Output Mamo (gọi sp **spmamo_pi_exec_get** để lấy danh sách dữ liệu)
+- b8: gửi topic Pusher **Loans.Pusher**
 
 #### UC-16: Tìm kiếm trade bán Margin (để PI Margin) 
 > - Thuộc nghiệp vụ cuối ngày (sv endday)
-> - API Tìm kiếm Xóa hợp đồng thành lý **http://mamo.rs-dev.loans.fpts.com.vn:8086/api/v1/Margin/contracts/liquidated/deleted***
 > - API trả cứu/ tìm kiếm DS HĐ chưa PI **http://mamo.rs-dev.loans.fpts.com.vn:8086/api/v1/Margin/unpayment-institution**
 
 - b1: Form PI Marmor bấm nút Tìm kiếm
+- b2: Gọi tới API tra cứu/ tìm kiếm danh sách HĐ chưa PI
+- b3: API gọi tới SP **spmamo_pi_get** để lấy ra danh sách
+
+
+> - API Tìm kiếm Xóa hợp đồng thành lý **http://mamo.rs-dev.loans.fpts.com.vn:8086/api/v1/Margin/contracts/liquidated/deleted***
 - b2: Gọi tới API Tìm kiếm Xóa hợp đồng thanh lý
 - b3: API gọi tới API **http://ezopengtw-dev.customer.fpts.com.vn:8086/api/v1/Ezopen/fpts-insider-get** để lấy danh sách NNB, NLQ hiệu lực bên EzOpen
 - b3: Lấy dữ liệu trả ra của API bên Open truyền vào SP **spmamo_autosell_delete_get** để hiển thị danh sách ra màn hình.
@@ -474,15 +478,14 @@ PI MAMO
 > - Thuộc nghiệp vụ cuối ngày (sv endday)
 > - Job tự động chạy hàng ngày lúc 11h35 
 > - Có API trong trường hợp cần chạy lại
-> - Gửi msg Tiền sang topic Account
-> - Account không xử lý, chỉ ghi log -> Ko cần nhận phản hồi Account
+> - Gửi msg Tiền sang topic Account (Account không xử lý, chỉ ghi log -> Ko cần nhận phản hồi Account)
 
 API Settle trả nợ bẳng bán ký quỹ **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/api/v1/Jobs/settle-debit**
 - b1: Gọi Sp **mamo.spmamo_sell_settle**
   - Exception: gọi SP Fail thì ghi lỗi
 - b2: Lấy **rs** danh sách từ SP trả ra để gửi msg ra topic cho Account
-- b3: Gửi msg Tiền sang topic Account cho all row
-- b4: Gửi msg Output Loans ra topic 
+- b3: Gửi msg Tiền sang topic Account **Information.Account.Cash** cho all row
+- b4: Gửi msg Output Loans ra topic **Loans.Mamo.Output**
 
 
 
@@ -491,12 +494,16 @@ API Settle trả nợ bẳng bán ký quỹ **http://endday.mamo.sv-dev.loans.fp
 
 
 ### UC-25: Cập nhật tham số Mamo cho ALL KH (MAMO.25)
+> - Thuộc nghiệp vụ cuối ngày (sv endday)
 
+- b1: Gọi API **http://marparas-dev.para.fpts.com.vn:8086/api/Para/GetParameterEndDay** parameter mamo để lấy ALL DL gói, danh mục và gán gói
+- b2: Gọi SP **mamo.spmamo_parameter_eod** để cập nhật DB
 
 
 ### UC-26: Cập nhật tham số phí HTV cho ALL KH (MAMO.26)
 > - Thuộc nghiệp vụ cuối ngày (sv endday)
 > - Job
+> - Có API chạy thay Job
 
 API Cập nhật tham số phí HTV cho ALL KH  **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/api/v1/Jobs/param/feerate**
 - b1: Gọi API Fee **http://para.fee.rs-dev.toms.fpts.com.vn:8086/api/v1/fee/clientcode-T?type=2** để lấy DS tỉ lệ phí HTV của ALL TK (gói T+ thì type=1, gói thường type=2)
@@ -537,9 +544,30 @@ API Cập nhật tham số phí HTV cho ALL KH  **http://endday.mamo.sv-dev.loan
 API Cập nhật DS broker được gán cho KH **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/api/v1/Mamo/broker**
 - b1: Gọi API **http://para.fee.rs-dev.toms.fpts.com.vn:8086/api/v1/fee/broker-actvice-mamo** của Fee để lấy DS cần cập nhật (lấy all dữ liệu)
   - Exception: API không có dữ liệu thì báo lỗi
-- b2: Gọi SP **mamo.spmamo_brokercust_i** để cập nhật DS vào DB: truyền p_Action = 2, p_list_brokercust = DS từ API 
+- b2: Gọi SP **mamo.spmamo_brokercust_i** để cập nhật DS vào DB: truyền p_Action = 2, p_list_brokercust = DS từ API
 
 
+### UC-37: Chốt DL cuối ngày - EOD Mamo (MAMO.37)
+> - Thuộc nghiệp vụ cuối ngày (sv endday)
+> - Job Service
+> - Thời gian chạy: Sau khi active phí cuối  ngày done, sau khi EOD TRD done (active tham số mamo cuối ngày done)
+
+- b1: Consume Msg Topic Fee: **Fee.Trade.Flags** (check có msg active phí cuối ngày xong: EodFee=1
+{
+  "EodFee": 1,
+  "Alastupdate": "2024-07-29T18:22:15.8444381+07:00"
+}
+- b2: Gọi SP **trd.sptrd_check_eod_bod** TRD check EOD TRD done
+- b3: Cập nhật broker ưu tiên của KH (chạy UC-36)
+- b4: Cập nhật tham số phí HTV cho ALL KH (chạy UC-26)
+- b5: Cập nhật tham số cho ALL KH (chạy UC-25)
+- b6: Cập nhật giá sàn (chạy UC-20)
+- b7: Gọi SP **mamo.spmamo_sum** chốt DL Mamo
+- Exception:
+  - Check TRD chưa EOD thì đợi 1 phút sau check lại
+  - Lỗi 1 bước thì dừng lại và mail thông báo lỗi
+ 
+    
 
 
 
