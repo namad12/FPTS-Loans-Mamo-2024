@@ -468,9 +468,20 @@ PI MAMO
 
 
 ### UC-21: Tổng hợp các HĐ bị thanh lý (MAMO.21)
+> - Thuộc nghiệp vụ cuối ngày (sv endday)
+> - Job chạy tự động lúc 17h01 hàng ngày
+> - Không gửi msg sang topic Account
 
+- b1: Đúng 17h01 hàng ngày từ thứ 2 đến thứ 6 Gọi SP validate **spmamo_auto_sell_validate** 
+  - Exception: SP trả false thfi ghi log infor và return
+- b2: Chạy cập nhật giá sàn (chạy UC-19: Cập nhật HĐ mamo khi chạy HT (MAMO.19))
+  - Exception: Chạy cập nhật giá sàn lỗi thì ghi log lỗi và vẫn chạy tiếp các bước sau
+- b3: Gọi SP nghiệp vụ **spmamo_auto_sell_sum** 
+  - Exception: Chạy SP xử lý lỗi thì Gửi mail cho FIT
 
-
+```
+  API Tổng hợp các HĐ bị thanh lý **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/api/v1/Jobs/Summary-auto-sell**
+```
 
 
 ### UC-22: Xóa HĐ mamo bị thanh lý (MAMO.22)
@@ -493,6 +504,13 @@ API Settle trả nợ bẳng bán ký quỹ **http://endday.mamo.sv-dev.loans.fp
 
 
 ### UC-24: Cập nhật tham số Mamo cho từng TK (MAMO.24)
+
+
+
+### CHẠY HỆ THỐNG
+#### Form: Trạng thái thị trường mamo
+b1: Ấn nút Cập nhật trên form để gọi tới API **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/api/v1/SystemLog**
+b2: API gọi tới SP **spmamo_loging_i** để insert log 
 
 
 
@@ -539,7 +557,14 @@ API Cập nhật tham số phí HTV cho ALL KH  **http://endday.mamo.sv-dev.loan
 
 ### UC-31: Thông báo trạng thái HĐ (tất toán/ rơi vào mức xử lý) Mamo (MAMO.31)
 
+### UC-32: Thông báo cho KH sắp đến ngày GD KHQ
+> - Thuộc nghiệp vụ cuối ngày (sv endday)
+> - Job chạy lúc 20h từ thứ 2 đến thứ 6
+> - Có API để chạy lại Job
 
+- b1: Gọi API của CustId để lấy danh sách quyền sắp tới ngày GD KHQ
+  - Exception: API không có dữ liệu thì không làm gì nữa, log infor
+- b2: Gọi SP **spmamo_mail_gdkhq** xử lý để insert bảng mail 
 
 ### UC-36: Cập nhật Broker ưu tiên của KH (MAMO.36)
 > - Thuộc nghiệp vụ cuối ngày (sv endday)
