@@ -435,15 +435,33 @@ PI MAMO
 - b3: API gọi tới API **http://ezopengtw-dev.customer.fpts.com.vn:8086/api/v1/Ezopen/fpts-insider-get** để lấy danh sách NNB, NLQ hiệu lực bên EzOpen
 - b3: Lấy dữ liệu trả ra của API bên Open truyền vào SP **spmamo_autosell_delete_get** để hiển thị danh sách ra màn hình.
 
+### Cập nhật hợp đồng Mamo (MAMO.19)
+```
+EzLoans/Pages/ChayHeThong/Margin/UpdateContract.aspx
+```
+- Bấm nút **Cập nhật** để gọi 2 api **UC-19**
 
-### UC-18: Cập nhật giá tham chiếu (để cập nhật hđ mamo khi chạy hệ thống) (MAMO.18)
+#### UC-19: Cập nhật giá đóng cửa (để cập nhật hđ mamo khi chạy hệ thống) (MAMO.19)
+> - Thuộc nghiệp vụ cuối ngày (sv endday)
+> - API
+> - Không cần gửi Account
+> - Controler: Price
+> - Service: Endday
 
+API Cập nhật giá tham chiếu hoặc giá sàn. Nếu priceType=1 thì cập nhật giá tham chiếu, nếu là 3 thì cập nhật giá sàn **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/api/v1/Price**
+- b1: Gọi API Price **http://dev.gateway.fpts.com.vn/news/api/Loans_Mamo/ClosePrice** để lấy giá đóng cửa của ALL các mã CK
+  - Exception: API không có dữ liệu thì ghi log lỗi và return false
+- b2: Gọi SP Mamo **spmamo_price_u** để insert DL vào DB
+  - Exception: SP chạy không thành công thì phản hồi API là False, Code, Message lỗi
 
-
-### UC-19: Cập nhật HĐ mamo khi chạy HT (MAMO.19)
+#### UC-19: Cập nhật HĐ mamo khi chạy HT (MAMO.19)
 > - Thuộc nghiệp vụ Cuối ngày (sv endday)
 > - Không gửi msg sang Account
+> - API
+> - Controler: Price
+> - Service: Endday
 
+API Cập nhật HĐ mamo khi chạy HT **http://endday.mamo.sv-uat.loans.fpts.com.vn:8086/api/v1/Price/contract**
 - b1: Gọi SP **spmamo_contract_price_u** mamo để cập nhật HĐ
   - Exception: gọi SP thất bại thì phản hồi API là False, Code, Message lỗi
 - b2: Lấy DL trả ra từ SP mamo: Loop để gọi SP RPT **rpt.spsms_insertsmsdata** gửi SMS
