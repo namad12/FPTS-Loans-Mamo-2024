@@ -551,17 +551,63 @@ API Cập nhật tham số phí HTV cho ALL KH  **http://endday.mamo.sv-dev.loan
 
 
 ### UC-27: Đối chiếu PI (MAMO.27)
+> - Thuộc nghiệp vụ cuối ngày (sv endday)
+> - Viết API đối chiếu
+> - Form: https://internaltest.fpts.com.vn/EzLoans/Pages/ChayHeThong/Margin/PI.aspx
 
+- b1: user bấm nút Đối chiếu trên form Đối chiếu PI
+- b2: Form gọi tới API **http://mamo.rs-dev.loans.fpts.com.vn:8086/api/v1/Comparison/PI**
+- b3: API gọi SP Mamo **mamo.spmamo_compare_pi_get** để lấy danh sách PI ở Mamo
+- b4: Gọi SP Nova **nova.spnova_doichieu_pi** để lấy danh sách PI ở Nova
+- b5: Nếu cả Mamo và Nova đều không có dữ liệu thì **returncode=1; returnmessage="Đối chiếu thành công!; sumAmount=0, sumQuantityMar = 0, sumQuantityMor = 0**
+- b6: Đối chiếu theo key là SettleId, ContractNUm, ClientCode, StockCode
+  - GD PI có ở Mamo nhưng không có ở Nova
+  - GD PI có ở Nova nhưng không có ở Mamo
+  - Có ở cả Mamo và Nova nhưng lệch số (lệch một trong các giá trị Quantity, PayAmount)
+- b7: Tính tổng: Lấy DS Mamo
+  - SumAmount = tổng PayAmount ở Mamo
+  - SumQuantityMar = tổng Quantity ở Mamo có TypeText='MAR'
+  - SumQuantityMor = tổng Quantity ở Mamo có TypeText='MOR'
+- b8: Nếu không có dòng nào lệch thì **returncode=1; returnmsg='Đối chiếu thành công!'; trả ra số tổng SumAmount, SumQuantityMar, SumQuantityMor**
+- b9: Nếu có dòng lệch thì **returncode=2; returnmsg='Đối chiếu không thành công!'**
 
 
 ### UC-28: Đối chiếu hợp đồng Mamo (MAMO.28)
+> - Thuộc nghiệp vụ Cuối ngày (sv api)
+> - API đối chiếu HĐ Mamo
+> - Form: https://internaltest.fpts.com.vn/EzLoans/Pages/ChayHeThong/Margin/DoiChieuHDKQ.aspx
 
-
+- b1: User bấm Đối chiếu trên Form, sẽ gọi tới Api **http://mamo.rs-dev.loans.fpts.com.vn:8086/api/v1/Comparison/contract?agentGroup=ALL**
+- b2: Api gọi SP Mamo **mamo.spmamo_compare_contract_get** để lấy danh sách HĐ ở Mamo
+- b3: Gọi tiếp SP ở Nova để lấy danh sách HĐ ở Nova
+- b4: Nếu cả Mamo và Nova đều không có dữ liệu thì **returncode=1; returnmsg='Đối chiếu thành công!; trả ra số tổng sumAmount=0; sumQuantity=0**
+- b5: Đối chiếu theo key ContractNum
+  - Nếu HĐ có ở Mamo nhưng không có ở Nova
+  - Nếu HĐ có ở Nova nhưng không có ở Mamo
+  - Nếu HĐ có ở cả Mamo và Nova nhưng lệch số (lệch một trong các giá trị startQuantity, startAmount)
+- b6: Tính tổng -> lấy danh sách Mamo **SumAmount = tổng StartAmount ở Mamo; SumQuantity = tổng StartQuantity ở Mamo**
+  - Nếu không có dòng nào lệch thì **returncode=1; returnmsg = 'Đối chiếu thành công!'; trả ra số tổng: SumAmount, SumQuantity'**
+  - Nếu có dòng lệch thì **returncode=2; returnmsg='Đối chiếu không thành công!'; trả ra DS các dòng lệch gồm các cột: ContractNum, QuantityNova, AmountNova, QuantityMamo, AmountNova, Branch**
 
 ### UC-29: Đối chiếu trả nợ Mamo (MAMO.29)
+> - Thuộc nghiệp vụ Cuối ngày (sv api)
+> - API đối chiếu trả nợ mamo
+> - Form: https://internaltest.fpts.com.vn/EzLoans/Pages/ChayHeThong/Margin/CompareDebtRepayment.aspx
+
+- b1: User bấm Đối chiếu, form sẽ gọi tới API: **http://mamo.rs-dev.loans.fpts.com.vn:8086/api/v1/Comparison/debit?agentGroup=ALL**
+- b2: API gọi SP Mamo để lấy danh sách trả nợ Mamo
+- b3: Gọi tiếp SP ở Nova để lấy danh sách trả nợ ở Nova
+- b4: Nếu cả Mamo và Nova đều không có dữ liệu thì **returncode=1; returnmsg='Đối chiếu thành công!'; trả ra số tổng: sumAmount=0; sumCharge=0**
+- b5: Đối chiếu theo key là ContractNum
+  - Nếu GD trả nợ có ở Mamo nhưng không có ở Nova
+  - Nếu GD trả nợ có ở Nova nhưng không có ở Mamo
+  - Nếu có ở cả Mamo và Nova nhưng lệch số (lệch 1 trong các giá trị PayAmount, Charge) thì b6
+- b6: Tính tổng -> lấy DS Mamo **sumAmount = tổng PayAmount ở Mamo; sumCharge = tổng Charge ở Mamo**
+  - Nếu không có dòng nào lệch thì **returncode=1; returnmsg = 'Đối chiếu thành công!'; trả ra số tổng sumAmount; sumCharge**
+  - Nếu có dòng lệch thì **returncode=2; returnmsg='Đối chiếu không thành công!'; trả ra DS các dòng lệch gồm các cột ContractNum, ChargeNova, AmountNova, ChargeMamo, AmountMamo, Branche**
 
 
-
+    
 ### UC-30: Thông báo cho KH các HĐ Mamo quá hạn (MAMO.30)
 > - Thuộc nghiệp vụ Cuối ngày (sv endday)
 > - Job
