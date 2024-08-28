@@ -147,8 +147,8 @@
 ### UC-06: Hủy dịch vụ Mamo (MAMO.6)
 
 
-
-### UC-07: Phân bổ quyền (MAMO.7)
+### Phân bổ quyền (MAMO.7)
+#### UC-07: Phân bổ quyền (MAMO.7)
 
 - b1: Check RequestId tại Log Input Memory
 - b2: Gọi SP làm nghiệp vụ bổ quyền và Log Input cho ALL row (lỗi 1 dòng update Log Input và xử lý tiếp các dòng khác)
@@ -190,6 +190,11 @@
     - Check với Account xem nhận được bao nhiêu Msg Tiền, CK
     - Update Log Sum, Log Input để chạy lại API hoặc SV tự chạy tiếp
     - Gửi tay Msg thiếu
+   
+#### UC-07: Check số HĐ ccq có mã ck không còn trong danh mục cho vay - ezcust gọi để bổ quyền (MAMO.7)
+> - Thuộc Service LoansMamo.Api
+> - Api check **http://mamo.rs-uat.loans.fpts.com.vn:8086/api/v1/Mortgage/MorRight-Check**
+> - Api gọi tới SP Mamo **spmamo_mor_rights_check**
 
 
 ### UC-11: Cầm cố quyền (MAMO.11)
@@ -658,6 +663,14 @@ API Cập nhật DS broker được gán cho KH **http://endday.mamo.sv-dev.loan
 - Exception:
   - Check TRD chưa EOD thì đợi 1 phút sau check lại
   - Lỗi 1 bước thì dừng lại và mail thông báo lỗi
+
+
+
+### UC: Tra cứu tham số - HĐ ký quỹ trên EzTrade
+> - Thuộc sv api (LoansMamo.Api)
+> - Api tra cứu **http://mamo.rs-uat.loans.fpts.com.vn:8086/api/v1/Margin/contracts**
+> - Api gọi tới SP Mamo tra cứu **spmamo_searchcontract_eztrade**
+
  
     
 
