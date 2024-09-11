@@ -141,12 +141,33 @@
 
 
 ### UC-05: Đăng ký dịch vụ Mamo (MAMO.5)
+> - Thuộc nghiệp vụ trong ngày
 
+- b1: Gọi SP làm nghiệp vụ đăng ký dịch vụ mamo **spmamo_paramfromezopen_i_acc3**
+  - Nếu Thành công thì
+    - Insert log vào sp **spmarp_status_msg_acc**
+      - SP return Done thì -> Gửi message tiền sang topic Account **Information.Account.Cash** -> Return API **Chờ xử lý**
+      - SP return Fail thì -> Gửi message thất bại ra topic output **Loans.Mamo.Output** -> Return API **Lỗi xử lý**
+  - Nếu SP return Fail thì Gửi msg ra topic pusher ezopen **Loans.Mamo.Output** -> Return API **Lỗi xử lý**
+- b2: Nhận phản hồi từ topic output **Information.Account.Cash.Output** từ account
+  - Nếu acc phản hồi thành công thì -> Gửi message Thành công ra topic output **Loans.Mamo.Output, Information.Parameter.Mamo.Output**
+  - Nếu acc phản hồi thất bại thì
+    - Gọi SP revert lại nghiệp vụ đăng ký dịch vụ mamo **spmamo_paramfromezopen_r_acc3**
+    - Gửi message Thất bại ra topic output **Loans.Mamo.Output**
 
 
 ### UC-06: Hủy dịch vụ Mamo (MAMO.6)
+> - Thuộc nghiệp vụ trong ngày
 
-
+- b1: Gọi SP insert log **spmarp_status_msg_acc**
+  - Nếu SP return Success thì -> Gửi message tiền sang topic Account **Information.Account.Cash** -> Return API **Chờ xử lý**
+  - Nếu SP return Fail thì -> Gửi message thất bại ra topic output **Loans.Mamo.Output** -> Return API **Lỗi xử lý**
+- b2: Nhận phản hồi từ topic output **Information.Account.Cash.Output** từ account
+  - Nếu acc phản hồi thành công thì -> Gọi SP làm nghiệp vụ hủy đăng ký dịch vụ mamo **SPMAMO_PARAMFROMEZOPEN_CLOSE**
+    - Nếu SP return Success thì -> Gửi message Thành công ra topic output **Loans.Mamo.Output, Information.Parameter.Mamo.Output**
+    - Nếu SP return Fail thì -> Gửi message Revert Tiền ra topic account, và topic output cho ezopen **Information.Account.Cash, Loans.Mamo.Output**
+  - Nếu acc phản hồi thất bại thì -> Gửi message thất bại ra topic cho ezopen **Loans.Mamo.Output**
+     
 ### Phân bổ quyền (MAMO.7)
 #### UC-07: Phân bổ quyền (MAMO.7)
 
