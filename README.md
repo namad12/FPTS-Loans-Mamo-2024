@@ -170,14 +170,19 @@
      
 ### Phân bổ quyền (MAMO.7)
 #### UC-07: Phân bổ quyền (MAMO.7)
+> - Thuộc nghiệp vụ trong ngày (service intraday)
+> - API xử lý cho N row
+> - Tăng dư nợ, tăng CK mar
+> - Gửi message account ra topic tiền trước, message chứng khoán sau
+> - Xử lý trước, nhận phản hồi account sau
 
 - b1: Check RequestId tại Log Input Memory
-- b2: Gọi SP làm nghiệp vụ bổ quyền và Log Input cho ALL row (lỗi 1 dòng update Log Input và xử lý tiếp các dòng khác)
-- b3: Gọi SP lấy danh sách cần gửi Account (chỉ lấy các dòng đã xử lý thành công ở DB và chưa gửi Account)
+- b2: Gọi SP **spmamo_distribute_mor_rights** làm nghiệp vụ bổ quyền và trong SP Log Input cho ALL row (lỗi 1 dòng update Log Input và xử lý tiếp các dòng khác)
+- b3: Lấy danh sách **RS1** cần gửi Account (chỉ lấy các dòng đã xử lý thành công ở DB và chưa gửi Account) trong SP **spmamo_distribute_mor_rights**
 - b4: Ghi Log Input Memory
 - b5: Ghi Log Sum Memory
-- b6: Gửi Msg Tiền sang topic Account cho ALL row 
-- b7: Nhận phản hồi Tiền Account
+- b6: Gửi Msg Tiền sang topic Account **Information.Account.Cash** cho ALL row 
+- b7: Nhận phản hồi Tiền Account từ topic **Information.Account.Cash.Output**
   - Check Log Input Memory xem đã ghi chưa
   - Update Log Input Memory
   - Exception nhận phản hồi Tiền Account Fail
@@ -188,14 +193,16 @@
       - Update Log Input, Log Sum DB
       - Gửi Msg Output Mamo (gọi SP để lấy DS)
       - Gửi Mail kết quả cho user, FIT
-- b8: Gửi Msg CK sang topic Account
-- b9: Nhận phản hồi CK Account
+- b8: Gửi Msg CK sang topic Account **Information.Account.Securities** cho ALL row
+- b9: Nhận phản hồi CK Account từ topic **Information.Account.Securities.Output**
   - Check Log Input Memory xem đã ghi chưa
   - Update Log Input Memory 
   - Update Log Sum Memory
   - Check Log Sum (nếu đã nhận đủ phản hồi Account thì):
     - Update Log Input, Log Sum vào DB
-    - Gửi Msg Output Mamo (gọi SP để lấy danh sách)
+    - Gửi Msg Output Mamo (gọi SP **spmamo_distribute_mor_rights_get** để lấy danh sách)
+    - Gọi SP **sptrd_distribute_exec** cập nhật TRD
+      - Exception: Gọi SP TRD lỗi thì vẫn làm tiếp nghiệp vụ
     - Gửi Mail kết quả cho user, FIT
   - Exception nhận phản hồi CK Account Fail
     - Check Log Input Memory xem đã ghi chưa
@@ -204,7 +211,9 @@
     - Gửi Msg Revert Tiền sang topic Account 
     - Check Log Sum (nếu đã nhận đủ phản hồi Account thì)
       - Update Log Input, Log Sum DB
-      - Gửi Msg Output Mamo (gọi SP để lấy DS)
+      - Gửi Msg Output Mamo (gọi SP **spmamo_distribute_mor_rights_get** để lấy DS)
+      - Gọi SP **sptrd_distribute_exec** cập nhật TRD
+        - Exception: Gọi SP TRD lỗi thì vẫn làm tiếp nghiệp vụ
       - Gửi Mail kết quả cho User, FIT
   - Exception Service khởi động lại
     - Check Log Sum: Lấy số Msg cần gửi Tiền, CK Account
