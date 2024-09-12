@@ -701,6 +701,16 @@ API Cập nhật DS broker được gán cho KH **http://endday.mamo.sv-dev.loan
 > - Api tra cứu **http://mamo.rs-uat.loans.fpts.com.vn:8086/api/v1/Margin/contracts**
 > - Api gọi tới SP Mamo tra cứu **spmamo_searchcontract_eztrade**
 
+
+
+
+### Fix lỗi
+#### Lỗi Cầm cố CK đang về không hiện lên để cầm cố CK
+- Check Mã CK được khớp lệnh mua theo lệnh thường không? (nếu mua lệnh Margin thì sẽ không lên)
+- Check Mã CK được được khớp có nằm trong danh mục vay ký quỹ hay không? (nếu không nằm trong danh mục vay ký quỹ thì sẽ không cầm cố được)
+- Check thời gian đẩy nova của mã CK là khi nào (nếu sau 15h45 và trước 12h15 thì sẽ chưa hiển thị ck đang về được vì chưa tới giờ chạy job)
+
+  
  
     
 
