@@ -8,9 +8,54 @@
 
 ### UC-01: Thay đổi hạn mức trên Web/ App (MAMO.1)
 
-### Cầm cố
+### Cầm cố trên Internal, EzTrade, Mobile
 
 #### UC-02: Cầm cố web/ app (MAMO.2)
+> - Thuộc nghiệp vụ trong ngày (sv intraday)
+> - Api xử lý cho 1 row
+> - Tăng tiền, giảm CK
+> - Gửi message sang Account topic CK trước, Tiền sau
+> - Nhận phản hồi Account thì mới xử lý tiếp
+
+- Check RequestId tại InputLog trong Memory xem có không
+  - Nếu có thì return **Already processing request ...** và kết thúc API
+- Gọi SP **spmamo_mortgageadd_validate_eztrade** để Validate
+- Nếu SP validate Fail thì return kết thúc API
+- Nếu thành công thì lấy dữ liệu RS trả về từ SP **spmamo_mortgageadd_validate_eztrade** lưu vào InputLog Memory
+  - Gọi hàm HandleLogic xử lý tiếp
+    - Gửi message CK sang topic Account ****
+  - Nếu hàm xử lý Fail thì xóa InputLog memory sau đó return và kết thúc API
+    
+
+- b2: Gọi SP Validate (trong SP có ghi Log Input DB)
+  - Exception gọi SP Validate Fail -> Gửi Pusher
+- b3: Ghi Log Input Memory
+- b4: Gửi Msg CK sang topic Account
+- b5: Nhận phản hồi CK Account
+  - Check xem Log Input Memory đã được ghi chưa
+  - Update Log Input Memory
+  - Exception nhận phản hồi CK Fail 
+    - Check xem Log Input Memory đã được ghi chưa
+    - Update Log Input (memory + DB)
+    - Gửi Pusher
+- b6: Gửi Msg Tiền sang topic Account
+- b7: Nhận phản hồi Tiền Account
+  - Check xem Log Input Memory đã được ghi chưa
+  - Update Log Input Memory
+  - Exception nhận phản hồi Tiền Fail
+    - Check xem Log Input Memory đã được ghi chưa
+    - Update Log Input (memory + DB)
+    - Gửi Pusher
+- b8: Gọi SP làm nghiệp vụ cầm cố và update Log Input DB
+  - Exception gọi SP làm nghiệp vụ Fail
+    - Gửi Msg Revert CK Account
+    - Gửi Msg Revert Tiền Account
+    - Gửi Pusher
+- b9: Gọi SP cập nhật TRD
+  - Exception gọi SP Fail -> chỉ ghi Log
+- b10: Gửi Msg sang topic Output Mamo
+- b11: Gửi Pusher 
+
 
 #### UC-08: Cầm cố internal (MAMO.8)
 
