@@ -87,22 +87,22 @@
 
 # JOB
 ## JOB Oracle
-### JOB_BROKER_MAP_DPID => Cập nhật DL KH - Broker từ RPT (FREQ=DAILY; INTERVAL=1; BYDAY=MON,TUE,WED,THU,FRI; BYHOUR=2,12; BYMINUTE=5)
+### Cập nhật DL KH - Broker từ RPT => JOB_BROKER_MAP_DPID (FREQ=DAILY; INTERVAL=1; BYDAY=MON,TUE,WED,THU,FRI; BYHOUR=2,12; BYMINUTE=5)
 - Gọi SP **spmamo_broker_map_dpid_u**
-### JOB_ACCAGENT_I => Cập nhật Agent cho ALL KH hàng tháng (FREQ=MONTHLY; INTERVAL=1)
+### Cập nhật Agent cho ALL KH hàng tháng => JOB_ACCAGENT_I (FREQ=MONTHLY; INTERVAL=1)
 - Gọi SP **spmamo_accagent_i**
-### JOB_CONTRACT_TO_NOVA => Import HĐ vào Nova (FREQ=MINUTELY; INTERVAL=3)
+### Import HĐ vào Nova => JOB_CONTRACT_TO_NOVA (FREQ=MINUTELY; INTERVAL=3)
 - Gọi SP **spmamo_contract_to_nova**
-### JOB_PAY_TO_NOVA => Import Giao dịch trả nợ và Nova (FREQ=MINUTELY; INTERVAL=3)
+### Import Giao dịch trả nợ và Nova => JOB_PAY_TO_NOVA (FREQ=MINUTELY; INTERVAL=3)
 - Gọi SP **spmamo_pay_to_nova**
-### JOB_PEND_BUY_TRADE => Đẩy trade mua CK lên màn hình Cầm cố (FREQ=DAILY; INTERVAL=1; BYDAY=MON,TUE,WED,THU,FRI; BYHOUR=12,13,14,15; BYMINUTE=15,45)
+### Đẩy trade mua CK lên màn hình Cầm cố => JOB_PEND_BUY_TRADE (FREQ=DAILY; INTERVAL=1; BYDAY=MON,TUE,WED,THU,FRI; BYHOUR=12,13,14,15; BYMINUTE=15,45)
 - Chạy hàng ngày từ 12h15pm tới 15h45pm, cứ 30 phút lại chạy 1 lần
 - Gọi SP **spmamo_stock_pend_buy_detail_i**
-### JOB_TMAMO_NONBUSDAY_U => Cập nhật ngày nghỉ từ nova (FREQ=DAILY; INTERVAL=1; BYDAY=MON,TUE,WED,THU,FRI; BYHOUR=2)
+### Cập nhật ngày nghỉ từ nova => JOB_TMAMO_NONBUSDAY_U (FREQ=DAILY; INTERVAL=1; BYDAY=MON,TUE,WED,THU,FRI; BYHOUR=2)
 - Gọi SP **spmamo_nonbusday_u**
-### JOB_UPDATE_HTV_REACTIVE => Cập nhật phí reactive (FREQ=SECONDLY; INTERVAL=30)
+### Cập nhật phí reactive => JOB_UPDATE_HTV_REACTIVE (FREQ=SECONDLY; INTERVAL=30)
 - Gọi SP **spmamo_htv_reactive**
-### JOB_UPDATE_STOCKNAME => Cập nhật bảng CK: tên CK, sàn từ nova (FREQ=DAILY; INTERVAL=1; BYDAY=MON,TUE,WED,THU,FRI; BYHOUR=18; BYMINUTE=30)
+### Cập nhật bảng CK: tên CK, sàn từ nova => JOB_UPDATE_STOCKNAME (FREQ=DAILY; INTERVAL=1; BYDAY=MON,TUE,WED,THU,FRI; BYHOUR=18; BYMINUTE=30)
 - Chạy block code sau:
 ```
 declare    
@@ -119,6 +119,13 @@ end;
   
 ## JOB Service
 ### JOB Cầm cố quyền/ Gia hạn tự đông=> MortgageAndExtendAuto (Cron expression: "0/30 * 16-19 ? * MON-FRI *") 
+#### JOB Cầm cố quyền (MAMO.11)
+- Ghi log Info **Mortgage: start at {time}**
+- Gọi API cầm cố **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/api/v1/Jobs/mortgage** 
+
+
+- Ghi log Info **Mortgage: done at {time}. [{code}] {message}**
+
 
 ### JOB   => SummaryAutoSell (Cron expression: "0 0 17 ? * MON-FRI *")            
 
