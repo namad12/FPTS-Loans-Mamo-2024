@@ -6,6 +6,171 @@
 > 
 > [MamoMailService](http://mail.mamo.sv-dev.loans.fpts.com.vn:8086/swagger/index.html)
 
+
+# EzLoans
+## Giao dịch > Margin 
+### Form: Cầm cố CK
+
+### Form: Trả nợ Mamo
+
+### Form: Gia hạn HĐ Mamo
+
+## Chạy hệ thống > Margin
+### Form: 1. Trạng thái thị trường Mamo
+
+### Form: 2. Tạo hợp đồng Margin
+
+### Form: 3. PI Mamo
+
+### Form: 4. Cập nhật hợp đồng Mamo
+
+### Form: 5. Xóa hợp đồng thanh lý Mamo
+
+### Form: Đối chiếu PI
+
+### Form: Đối chiếu HĐKQ
+
+### Form: Đối chiếu GDTNKQ
+
+### Form: Xóa bán xử lý Margin thường theo danh sách
+
+### Form: Lùi giờ Mamo
+
+## Báo cáo > Margin
+### Form: Tra cứu số dư Mamo
+
+### Form: Tra cứu hợp đồng Mamo
+
+### Form: Tra cứu trả nợ Mamo
+
+### Form: Tra cứu trả nợ từ bán CK
+
+### Form: In hợp đồng trả nợ Mamo
+
+### Form: Tra cứu gia hạn Mamo
+
+### Form: Tra cứu tình trạng hợp đồng
+
+### Form: Danh sách xử lý T-1 chưa trả nợ
+
+### Tra cứu bán xử lý Mamo
+
+### [Kiểm soát phiếu lệnh ký quỹ](https://internal.fpts.com.vn/EzLoans/Pages/BaoCao/Margin/KiemSoatPhieuLenh.aspx) (FRM và AST dùng)
+#### [Popup Broker đặt lệnh](https://internal.fpts.com.vn/EzLoans/Pages/BaoCao/Margin/Popup/BrokerPopup.aspx) (icon Kính lúp)
+- Gọi API bên Fee để lấy thông tin Broker **http://para.fee.rs-dev.toms.fpts.com.vn:8086/api/v1/fee/broker-actvice?** (input: brokerid, brokername)
+#### Mã khách hàng 058C TextOnchanged thì hiện nút Người Ủy quyền
+- Gọi API bên EzOpen để lấy thông tin KH **http://ezopengtw-dev.customer.fpts.com.vn:8086/api/v1/Ezopen/customerinfo-by-client?Custaccount=** (input: 058C292589)
+#### Lấy thông tin Ủy quyền KH (bấm nút Người UQ)
+- Gọi API bên EzOpen để lấy thông tin Ủy quyền KH **http://ezopengtw-dev.customer.fpts.com.vn:8086/api/v1/Ezopen/authorizedcust_get?clientcode=** (input: 058C292589)
+#### Tìm kiếm
+- Gọi API trong service LoansMamo.Api **http://mamo.rs-dev.loans.fpts.com.vn:8086/api/v1/Margin/checking-order?** (input: fromDate, toDate, clientCode, broker, type, agentGroup, status)
+- API gọi vào sp **spmamo_checkingorder_get**
+#### Cập nhật Trạng thái phiếu
+- Gọi API method PUT service LoansMamo.Eod **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/checking-order** (input: id, status, note, date, user)
+- API gọi vào SP **spmamo_checkingorder_u** để cập nhật trạng thái phiếu
+#### Cập nhật Note
+- Gọi API method PUT service LoansMamo.Eod **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/checking-order** (input: id, status, note, date, user)
+- API gọi vào SP **spmamo_checkingorder_u** để cập nhật Note
+#### Tổng hợp (chỉ được tổng hợp sau 16h30)
+- Gọi API method POST service LoansMamo.Eod **http://endday.mamo.sv-dev.loans.fpts.com.vn:8086/checking-order** (input: transDate)
+- API gọi vào SP **spmamo_checkingorder_i** để cập nhật Note
+
+### [Tra cứu phiếu lệnh](https://internaluat.fpts.com.vn/EzLoans/Pages/BaoCao/Margin/SearchOrderSlips.aspx) (FRM và AST dùng)
+#### [Popup Broker đặt lệnh](https://internal.fpts.com.vn/EzLoans/Pages/BaoCao/Margin/Popup/BrokerPopup.aspx) (icon Kính lúp)
+- Gọi API bên Fee để lấy thông tin Broker **http://para.fee.rs-dev.toms.fpts.com.vn:8086/api/v1/fee/broker-actvice?** (input: brokerid, brokername)
+#### Mã khách hàng 058C TextOnchanged thì hiện nút Người Ủy quyền
+- Gọi API bên EzOpen để lấy thông tin KH **http://ezopengtw-dev.customer.fpts.com.vn:8086/api/v1/Ezopen/customerinfo-by-client?Custaccount=** (input: 058C292589)
+#### Tìm kiếm
+- Gọi API trong service LoansMamo.Api **http://mamo.rs-dev.loans.fpts.com.vn:8086/api/v1/Margin/checking-order?** (input: fromDate, toDate, clientCode, broker, type, agentGroup, status)
+- API gọi vào sp **spmamo_checkingorder_get**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ### UC-01: Thay đổi hạn mức trên Web/ App (MAMO.1)
 
 ### Cầm cố trên Internal, EzTrade, Mobile
